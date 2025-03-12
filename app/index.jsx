@@ -6,10 +6,11 @@ import {
   Alert,
   TouchableOpacity,
 } from "react-native";
-import React from "react";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import AsyncStorage  from '@react-native-async-storage/async-storage'
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function Index() {
   const router = useRouter();
@@ -18,6 +19,33 @@ export default function Index() {
   const [scanned, setScanned] = useState(false);
   const [qrData, setQrData] = useState("");
   const [qrList, setQrList] = useState([]);
+
+  const loadQrList = async () => {
+    try {
+      const storedQrList = await AsyncStorage.getItem('qrList');
+      if (storedQrList) {
+        setQrList(JSON.parse(storedQrList)); // Converte de string JSON para array
+      }
+    } catch (error) {
+      console.error('Erro ao carregar qrList do AsyncStorage:', error);
+    }
+  };
+
+  const saveQrList = async (list) => {
+    try {
+      await AsyncStorage.setItem('qrList', JSON.stringify(list)); // Converte array para string JSON
+    } catch (error) {
+      console.error('Erro ao salvar qrList no AsyncStorage:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadQrList();
+  }, []);
+
+  useEffect(() => {
+    saveQrList(qrList);
+  }, [qrList]);
 
   if (!permission) {
     return <View />;
@@ -38,18 +66,6 @@ export default function Index() {
     setFacing((atual) => (atual === "back" ? "front" : "back"));
   }
 
-  // const handleCamera = ( {data} ) => {
-  //   setScanned(true)
-  //   setQrData(data)
-  //   setQrList((prevList) => [...prevList, data])
-  //   Alert.alert("QR Code Escaneado",
-  //     `Conteúdo: ${data}`,
-  //     [
-  //       { text: "OK", onPress: () => console.log("OK")}
-  //     ]
-  //   )
-  // }
-  // handleBarCodeScanned
   const handleCamera = ({ type, data }) => {
     setScanned(true);
     setQrData(data);
@@ -80,21 +96,30 @@ export default function Index() {
         onBarcodeScanned={scanned ? undefined : handleCamera}
       ></CameraView>
 
-      <View style={styles.controles}>
-        <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-          <Text style={styles.text}>Inverter Câmera</Text>
-        </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
+        <Ionicons name="camera-reverse-outline" size={32} color="white" />
+        {/* <Text style={styles.text}>Inverter Câmera</Text> */}
+      </TouchableOpacity>
 
+      
+
+      
+
+      <View style={styles.controles}>
+        {qrList && (
+          <TouchableOpacity style={styles.button} onPress={irParaHistorico}>
+            <MaterialIcons name="history" size={32} color="white" />
+            {/* <Text style={styles.text}>Ver Histórico</Text> */}
+          </TouchableOpacity>
+        )}
         {scanned && (
           <>
             <TouchableOpacity
               style={styles.button}
               onPress={() => setScanned(false)}
             >
-              <Text style={styles.text}>Escanear Novamente</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={irParaHistorico}>
-              <Text style={styles.text}>Ver Histórico</Text>
+              <MaterialCommunityIcons name="qrcode-scan" size={32} color="white" />
+              {/* <Text style={styles.text}>Escanear Novamente</Text> */}
             </TouchableOpacity>
           </>
         )}
@@ -105,6 +130,12 @@ export default function Index() {
           <Text style={styles.resultText}>{qrData}</Text>
         </View>
       )}
+
+      <View style={styles.counterContainer}>
+        <Text style={styles.counterText}>
+          Total de QR Codes: {qrList.length}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -129,13 +160,13 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     justifyContent: "space-around",
-    alignItems: "center", //alinha verticalmente
+    alignItems: "center",
     paddingVertical: 10,
     backgroundColor: "white",
   },
 
   button: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#8f0680",
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: 5,
@@ -144,12 +175,13 @@ const styles = StyleSheet.create({
   result: {
     flex: 1,
     flexDirection: "column",
-    backgroundColor: "#ccc",
+    backgroundColor: "#ba0da6",
     alignItems: "center",
     justifyContent: "center",
   },
 
   resultText: {
+    color: "white",
     fontSize: 16,
   },
 
@@ -159,4 +191,25 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 24,
   },
+
+  counterContainer: {
+    flex: 0.5,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ff82f1",
+  },
+
+  counterText: {
+    fontSize: 16,
+    color: "#8f0680",
+  },
+
+  flipButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 50,
+    padding: 10,
+  }
 });
