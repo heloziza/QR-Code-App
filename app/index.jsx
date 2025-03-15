@@ -44,7 +44,9 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
-    saveQrList(qrList);
+    if (qrList.length > 0) {
+      saveQrList(qrList);
+    }
   }, [qrList]);
 
   if (!permission) {
@@ -92,50 +94,42 @@ export default function Index() {
       <CameraView
         style={styles.camera}
         facing={facing}
-        barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-        onBarcodeScanned={scanned ? undefined : handleCamera}
-      ></CameraView>
-
-      <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
+        barcodeScannerSettings={
+          {barcodeTypes: ['qr']}
+        }
+        onBarcodeScanned={
+          scanned ? undefined : handleCamera
+        }
+      />
+      <TouchableOpacity
+        style={styles.flipButton}
+        onPress={toggleCameraFacing}
+      >
         <Ionicons name="camera-reverse-outline" size={32} color="white" />
-        {/* <Text style={styles.text}>Inverter Câmera</Text> */}
       </TouchableOpacity>
-
-      
-
-      
-
       <View style={styles.controles}>
         {qrList && (
-          <TouchableOpacity style={styles.button} onPress={irParaHistorico}>
-            <MaterialIcons name="history" size={32} color="white" />
-            {/* <Text style={styles.text}>Ver Histórico</Text> */}
+            <TouchableOpacity 
+            style={styles.button}
+            onPress={irParaHistorico}
+          ><MaterialIcons name="history" size={32} color="white" />
           </TouchableOpacity>
         )}
-        {scanned && (
+        { scanned && (
           <>
-            <TouchableOpacity
+            <TouchableOpacity 
               style={styles.button}
               onPress={() => setScanned(false)}
-            >
-              <MaterialCommunityIcons name="qrcode-scan" size={32} color="white" />
-              {/* <Text style={styles.text}>Escanear Novamente</Text> */}
+            ><MaterialCommunityIcons name="qrcode-scan" size={32} color="white" />
             </TouchableOpacity>
           </>
         )}
       </View>
-
-      {qrData !== "" && (
+      {qrData !== '' && (
         <View style={styles.result}>
           <Text style={styles.resultText}>{qrData}</Text>
         </View>
       )}
-
-      <View style={styles.counterContainer}>
-        <Text style={styles.counterText}>
-          Total de QR Codes: {qrList.length}
-        </Text>
-      </View>
     </View>
   );
 }
